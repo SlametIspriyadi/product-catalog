@@ -1,0 +1,22 @@
+<div *ngIf="product() as p" class="detail-container">
+  
+  <div class="detail-image-wrapper">
+    <img [src]="p.image" [alt]="p.title" class="detail-image">
+  </div>
+
+  <div class="detail-content">
+    <h1 class="detail-title">{{ p.title }}</h1>
+    
+    <span class="detail-category">{{ p.category }}</span>
+    
+    <p class="detail-price">{{ p.price | currency:'USD' }}</p>
+    
+    <p class="detail-description">{{ p.description }}</p>
+    
+    <button class="detail-button" (click)="addToCart()">
+      Add to Cart
+    </button>
+  </div>
+</div>
+
+

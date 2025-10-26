@@ -1,0 +1,56 @@
+/* ... (CSS Anda yang sudah ada) ... */
+
+/* Pastikan container navbar menggunakan flexbox 
+   untuk meratakan item ke kiri dan kanan */
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Memberi jarak antar link */
+}
+
+.nav-link {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.nav-link:hover {
+  color: #007bff;
+}
+
+/* Tombol register agar lebih menonjol */
+.button-register {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+.button-register:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+/* Teks sambutan */
+.nav-welcome {
+  font-size: 0.9rem;
+  color: #555;
+  margin-right: -10px; /* Jarak opsional */
+}
+
+/* Tombol Logout */
+.logout-button {
+  cursor: pointer; /* Ubah kursor jadi tangan */
+  font-weight: 600;
+  color: #dc3545; /* Beri warna merah */
+}
+.logout-button:hover {
+  color: #a71d2a;
+}

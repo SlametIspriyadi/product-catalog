@@ -1,0 +1,20 @@
+# --- Aturan Universal ---
+# Abaikan semua folder node_modules
+node_modules/
+
+# Abaikan semua folder vendor
+vendor/
+
+# Abaikan file log
+*.log
+
+# --- Aturan Khusus Backend (Laravel) ---
+# Abaikan file rahasia database/kunci API
+/backend/.env
+
+# Abaikan file log Laravel
+/backend/storage/logs/*.log
+
+# --- Aturan Khusus Frontend (Angular) ---
+# Abaikan cache build Angular
+/frontend/.angular/
