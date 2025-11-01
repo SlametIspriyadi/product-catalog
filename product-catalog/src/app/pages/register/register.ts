@@ -1,34 +1,32 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-// 1. Impor semua yang kita butuhkan untuk Reactive Forms
-import { 
-  ReactiveFormsModule, 
-  FormBuilder, 
-  FormGroup, 
-  Validators 
-} from '@angular/forms';
-import { RouterLink } from '@angular/router'; // Untuk link "Login"
-import { AuthService } from '../../services/auth'; // <-- Impor
-import { Router } from '@angular/router'; // <-- Impor Router
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterLink, Router } from '@angular/router'; // <-- 1. Impor Router
+
+// 2. Impor AuthService
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  // 2. Tambahkan ReactiveFormsModule dan RouterLink
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './register.html',
-  // 3. PENTING: Kita pakai ulang CSS dari login agar gayanya sama!
-  styleUrls: ['../login/login.css'] 
+  styleUrls: ['../login/login.css'] // (Tetap pakai CSS login)
 })
 export class RegisterComponent implements OnInit {
-registerForm!: FormGroup;
+
+  registerForm!: FormGroup;
   private fb = inject(FormBuilder);
-  private authService = inject(AuthService); // <-- Inject
-  private router = inject(Router); // <-- Inject
-  public registerError: any = null;
+  
+  // 3. Inject AuthService dan Router
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  // 4. (Opsional) Variabel untuk error validasi dari Laravel
+  public validationErrors: any = null;
 
   ngOnInit(): void {
-    // 4. Buat form dengan tiga field: name, email, password
+    this.authService.getCsrfToken().subscribe();
     this.registerForm = this.fb.group({
       name: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
@@ -37,17 +35,20 @@ registerForm!: FormGroup;
   }
 
   onSubmit() {
+    // 5. Hapus console.log lama, ganti dengan ini
     if (this.registerForm.valid) {
-      this.registerError = null;
+      this.validationErrors = null; // Bersihkan error lama
+
       this.authService.register(this.registerForm.value).subscribe({
-        next: () => {
-          console.log('Registrasi berhasil!');
-          // Arahkan ke halaman login setelah sukses register
+        next: (response) => {
+          console.log('Registrasi berhasil!', response);
+          // 6. Arahkan pengguna ke halaman Login setelah sukses
           this.router.navigate(['/login']);
         },
         error: (err) => {
-          console.error('Registrasi gagal', err);
-          this.registerError = err.error.errors; // Tampilkan error validasi
+          // Jika gagal (misal: 422 Unprocessable Entity / email sudah ada)
+          console.error('Registrasi gagal:', err);
+          this.validationErrors = err.error; // Simpan error dari Laravel
         }
       });
     } else {
@@ -55,7 +56,7 @@ registerForm!: FormGroup;
     }
   }
 
-  // 5. Buat getter untuk validasi di HTML
+  // (Getter name/email/password Anda tetap sama)
   get name() {
     return this.registerForm.get('name');
   }

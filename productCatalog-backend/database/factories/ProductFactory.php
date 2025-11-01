@@ -21,7 +21,7 @@ class ProductFactory extends Factory
             'price' => $this->faker->randomFloat(2, 10, 200),
             'description' => $this->faker->paragraph(3),
             'category' => $this->faker->word(),
-            'image' => $this->faker->imageUrl(640, 480, 'products', true),
+            'image' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/600px-No_image_available.svg.png',
         ];
     }
 }

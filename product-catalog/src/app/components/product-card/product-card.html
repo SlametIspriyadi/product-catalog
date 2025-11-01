@@ -1,10 +1,17 @@
-<a [routerLink]="['/products', product.id]" class="card">
-  
-  <img [src]="product.image" [alt]="product.title" class="card-image">
-  
-  <div class="card-content">
-    <h4 class="card-title">{{ product.title }}</h4>
+<div class="card">
+  <a [routerLink]="['/products', product.id]">
+    <img [src]="product.image" [alt]="product.title" class="card-image">
     
-    <p class="card-price">{{ product.price | currency:'USD' }}</p>
-  </div>
-</a>
+    <div class="card-content">
+      <h4 class="card-title">{{ product.title }}</h4>
+      <p class="card-price">{{ product.price | currency:'USD' }}</p>
+    </div>
+  </a>
+  
+  <button 
+    class="add-to-cart-btn" 
+    (click)="addToCart(product)"
+    [title]="!authService.isAuthenticated() ? 'Please login to add to cart' : 'Add to cart'">
+    {{ !authService.isAuthenticated() ? 'Login to Add to Cart' : 'Add to Cart' }}
+  </button>
+</div>

@@ -31,6 +31,10 @@
           <small *ngIf="password?.errors?.['minlength']">Password minimal 6 karakter.</small>
         </div>
       </div>
+
+      <div *ngIf="loginError" class="error-message-global">
+        {{ loginError }}
+      </div>
       
       <button type="submit" class="button-primary" [disabled]="loginForm.invalid">
         Login

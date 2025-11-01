@@ -1,26 +1,43 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-
+import { Observable, shareReplay } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  // 1. Definisikan URL API
-  private apiUrl = 'http://localhost:8000/api/products';
 
-  // 2. Inject HttpClient menggunakan fungsi inject()
+  private apiUrl = '/api/products'; // Gunakan path relatif
+
   private http = inject(HttpClient);
 
-  // 3. Buat fungsi untuk mengambil SEMUA produk
-  // Fungsi ini mengembalikan sebuah Observable yang berisi array produk
+  private productsCache$: Observable<any[]> | null = null;
+
   getProducts() {
-    return this.http.get<any[]>(this.apiUrl);
+    if (!this.productsCache$) {
+      console.log('ProductService: Fetching products from', this.apiUrl);
+      this.productsCache$ = this.http.get<any[]>(this.apiUrl, {
+        withCredentials: true,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).pipe(
+        shareReplay(1)
+      );
+    }
+    return this.productsCache$;
   }
 
-  // 4. Buat fungsi untuk mengambil SATU produk berdasarkan ID
   getProductById(id: string) {
-    // Kita gunakan backtick (`) untuk memasukkan variabel ${id} ke dalam string
-    return this.http.get<any>(`${this.apiUrl}/${id}`);
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.get<any>(url, {
+      withCredentials: true,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
   }
+
 }

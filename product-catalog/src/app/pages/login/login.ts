@@ -1,67 +1,68 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common'; // Untuk *ngIf
-// 1. Impor semua yang kita butuhkan untuk Reactive Forms
-import { 
-  ReactiveFormsModule, 
-  FormBuilder, 
-  FormGroup, 
-  Validators 
-} from '@angular/forms';
-import { RouterLink } from '@angular/router'; // Untuk link "Register"
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
+
+// 1. Impor AuthService
 import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  // 2. Tambahkan ReactiveFormsModule di sini
-  imports: [CommonModule, ReactiveFormsModule, RouterLink], 
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
 export class LoginComponent implements OnInit {
+  
   loginForm!: FormGroup;
   private fb = inject(FormBuilder);
-  private authService = inject(AuthService); // <-- Inject
-  public loginError: string | null = null; // <-- (Opsional) untuk pesan error
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
   
-  // // 3. Buat variabel untuk form kita
-  // loginForm!: FormGroup;
+  public loginError: string | null = null;
+  private returnUrl: string = '/products';
 
-  // // 4. Inject FormBuilder untuk "membangun" form
-  // private fb = inject(FormBuilder);
-
-  // 5. Kita pakai ngOnInit untuk menginisialisasi form saat komponen dimuat
   ngOnInit(): void {
+    // Get return URL from route parameters or default to '/products'
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/products';
+    
+    this.authService.getCsrfToken().subscribe();
     this.loginForm = this.fb.group({
-      // Buat dua kontrol: 'email' dan 'password'
-      // Kita juga tambahkan validasi dasar
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
-  // 6. Buat fungsi yang akan dipanggil saat form disubmit
   onSubmit() {
-    if (this.loginForm.valid) {
-      this.loginError = null; // Bersihkan error lama
-      // Panggil service Anda
-      this.authService.login(this.loginForm.value).subscribe({
-        next: () => {
-          // Sukses! AuthService akan otomatis redirect
-          console.log('Login berhasil!');
-        },
-        error: (err) => {
-          // Tangani jika login gagal
-          console.error('Login gagal', err);
-          this.loginError = 'Email atau password salah. Coba lagi.';
-        }
-      });
-    } else {
-      this.loginForm.markAllAsTouched();
-    }
+  if (this.loginForm.valid) {
+    this.loginError = null;
+    
+    // First get CSRF token, then attempt login
+    this.authService.getCsrfToken().subscribe({
+      next: () => {
+        this.authService.login(this.loginForm.value).subscribe({
+          next: (response) => {
+            console.log('Login berhasil!', response);
+            this.router.navigateByUrl(this.returnUrl);
+          },
+          error: (err) => {
+            console.error('Login gagal:', err);
+            this.loginError = err.error.message || 'Email atau password salah. Coba lagi.';
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Gagal mendapatkan CSRF token:', err);
+        this.loginError = 'Terjadi kesalahan sistem. Silakan coba lagi.';
+      }
+    });
+  } else {
+    this.loginForm.markAllAsTouched();
   }
-
-  // 7. (Helper) Buat getter agar lebih mudah mengecek error di HTML
+}
+  // (Getter email/password Anda tetap sama)
   get email() {
     return this.loginForm.get('email');
   }

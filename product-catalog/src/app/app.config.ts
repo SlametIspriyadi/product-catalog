@@ -1,17 +1,35 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection} from '@angular/core';
 import { provideRouter } from '@angular/router';
-
 import { routes } from './app.routes';
-// import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { 
+  provideHttpClient, 
+  withFetch, 
+  // withCredentials,
+  withXsrfConfiguration 
+} from '@angular/common/http';
+
+// 1. Impor interceptor Anda
+import { credentialsInterceptor } from './with-credentials-interceptor'; 
+// 2. Impor 'withInterceptors'
+import { withInterceptors } from '@angular/common/http';
 
 export const appConfig: ApplicationConfig = {
+  
   providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideZonelessChangeDetection(),
-    provideRouter(routes)
-    // ,provideClientHydration(withEventReplay())
-    , provideHttpClient(withFetch())
-
+    provideRouter(routes),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideHttpClient(
+      withFetch(),
+      // withCredentials(),
+      withXsrfConfiguration({ 
+        cookieName: 'XSRF-TOKEN', // Nama cookie Laravel
+        headerName: 'X-XSRF-TOKEN' // Nama header Laravel
+      }),
+      // 4. TAMBAHKAN 'withInterceptors' DI SINI
+      withInterceptors([
+        credentialsInterceptor // <-- Daftarkan interceptor Anda
+      ])
+    ),
+    // ...
   ]
 };

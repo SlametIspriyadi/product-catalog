@@ -4,6 +4,7 @@ import { ProductDetailComponent } from './pages/product-detail/product-detail';
 import { CartComponent } from './pages/cart/cart';
 import { LoginComponent } from './pages/login/login';
 import { RegisterComponent } from './pages/register/register';
+import { authGuard } from './guards/auth.guard';
 
 // 1. Impor Layout baru kita
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
@@ -29,7 +30,11 @@ export const routes: Routes = [
     children: [
       { path: 'products', component: ProductListComponent },
       { path: 'products/:id', component: ProductDetailComponent },
-      { path: 'cart', component: CartComponent },
+      { 
+        path: 'cart', 
+        component: CartComponent,
+        canActivate: [authGuard]
+      },
       
       // Redirect URL kosong (root) ke halaman produk
       { path: '', redirectTo: 'products', pathMatch: 'full' }

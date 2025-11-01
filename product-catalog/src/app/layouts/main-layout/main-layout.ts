@@ -1,13 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { CartService } from '../../services/cart.service'; // Sesuaikan path jika perlu
-import { AuthService } from '../../services/auth';
+import { CartService } from '../../services/cart.service';
+import { AuthService } from '../../services/auth'; // <-- 1. Impor AuthService
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  // 1. Tambahkan semua impor yang dibutuhkan navbar
   imports: [CommonModule, RouterLink, RouterOutlet],
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.css']

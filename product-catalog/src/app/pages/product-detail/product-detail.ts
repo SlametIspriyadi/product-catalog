@@ -29,10 +29,33 @@ export class ProductDetailComponent implements OnInit {
   addToCart() {
     const currentProduct = this.product();
     if (currentProduct) {
-      this.cartService.addItem(currentProduct);
-      console.log(`${currentProduct.title} ditambahkan ke keranjang dari ProductDetailComponent`);
+      const button = document.querySelector('.add-to-cart-btn') as HTMLButtonElement;
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Adding...';
+      }
+
+      this.cartService.addToCart(currentProduct).subscribe({
+        next: () => {
+          if (button) {
+            button.textContent = 'Added to Cart';
+            setTimeout(() => {
+              button.disabled = false;
+              button.textContent = 'Add to Cart';
+            }, 2000);
+          }
+        },
+        error: (error) => {
+          console.error('Error adding to cart:', error);
+          if (button) {
+            button.disabled = false;
+            button.textContent = 'Add to Cart';
+          }
+          alert('Product added to cart locally. Syncing with server failed.');
+        }
+      });
     } else {
-      console.error('Tidak ada produk untuk ditambahkan ke keranjang.');
+      console.error('No product to add to cart.');
     }
   }
 
