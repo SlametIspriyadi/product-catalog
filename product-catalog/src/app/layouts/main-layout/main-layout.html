@@ -9,7 +9,7 @@
       <a [routerLink]="['/cart']" class="nav-cart">
         Cart 
         <span class="cart-badge">
-          {{ cartService.totalItems() }}
+          {{ cart().itemCount }}
         </span>
       </a>
 

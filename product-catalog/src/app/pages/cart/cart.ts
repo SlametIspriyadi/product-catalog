@@ -11,12 +11,16 @@ import { RouterLink } from '@angular/router'; // Impor RouterLink untuk link
   styleUrls: ['./cart.css']
 })
 export class CartComponent {
-  // 1. Inject CartService (buat 'public' agar bisa dipakai di HTML)
-  public cartService = inject(CartService);
+  private cartService = inject(CartService);
+  
+  // Create computed signals for the template
+  protected readonly cart = this.cartService.cart;
 
-  // 2. Buat fungsi untuk tombol "Remove"
-  // (Kita hanya memanggil fungsi yang sudah ada di service)
   removeItem(productId: number) {
-    this.cartService.removeItem(productId);
+    this.cartService.removeFromCart(productId).subscribe();
+  }
+
+  updateQuantity(productId: number, quantity: number) {
+    this.cartService.updateQuantity(productId, quantity).subscribe();
   }
 }

@@ -1,7 +1,8 @@
 import { Injectable, signal, computed, effect, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, tap } from 'rxjs';
+import { BehaviorSubject, tap, Observable } from 'rxjs';
+import { Cart, CartItem } from '../interfaces/cart.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -11,22 +12,28 @@ export class CartService {
   private http = inject(HttpClient);
   private apiUrl = '/api/cart';
 
-  private cartItemsSubject = new BehaviorSubject<any[]>([]);
-  public cartItems = signal<any[]>([]);
+  private cartSignal = signal<Cart>({ 
+    items: [], 
+    total: 0,
+    itemCount: 0
+  });
+  
+  cart = computed(() => this.cartSignal());
+
+  private updateCartTotals(cart: Cart) {
+    cart.itemCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+    cart.total = cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cart;
+  }
   
   constructor() {
-    // Initialize with empty array
-    this.cartItems.set([]);
-    this.cartItemsSubject.next([]);
-
     if (isPlatformBrowser(this.platformId)) {
       const saved = localStorage.getItem('cart');
       if (saved) {
         try {
-          const items = JSON.parse(saved);
-          if (Array.isArray(items)) {
-            this.cartItemsSubject.next(items);
-            this.cartItems.set(items);
+          const cart = JSON.parse(saved);
+          if (cart && Array.isArray(cart.items)) {
+            this.cartSignal.set(cart);
           }
         } catch (e) {
           console.error('Error parsing cart from localStorage:', e);
@@ -34,34 +41,32 @@ export class CartService {
         }
       }
     }
+    
+    // Set up effect to save cart to localStorage when it changes
+    effect(() => {
+      if (isPlatformBrowser(this.platformId)) {
+        localStorage.setItem('cart', JSON.stringify(this.cart()));
+      }
+    });
   }
 
-  public totalItems = computed(() => {
-    const items = this.cartItems();
-    return Array.isArray(items) ? items.length : 0;
-  });
-
-  public totalPrice = computed(() => {
-    const items = this.cartItems();
-    return Array.isArray(items) ? 
-      items.reduce((total, item) => total + (parseFloat(item.price) || 0), 0) : 0;
-  });
-
   private loadCart() {
-    // Initialize with empty array
-    const emptyCart: any[] = [];
-    this.cartItems.set(emptyCart);
-    this.cartItemsSubject.next(emptyCart);
+    // Initialize with empty cart
+    const emptyCart: Cart = {
+      items: [],
+      total: 0,
+      itemCount: 0
+    };
+    this.cartSignal.set(emptyCart);
 
     if (isPlatformBrowser(this.platformId)) {
       // First try to load from localStorage
       const saved = localStorage.getItem('cart');
       if (saved) {
         try {
-          const items = JSON.parse(saved);
-          if (Array.isArray(items)) {
-            this.cartItemsSubject.next(items);
-            this.cartItems.set(items);
+          const cart = JSON.parse(saved);
+          if (cart && Array.isArray(cart.items)) {
+            this.cartSignal.set(this.updateCartTotals(cart));
           }
         } catch (e) {
           console.error('Error parsing cart from localStorage:', e);
@@ -71,13 +76,13 @@ export class CartService {
     }
     
     // Then try to sync with server
-    this.http.get<any[]>(this.apiUrl).subscribe({
-      next: (items) => {
-        if (Array.isArray(items)) {
-          this.cartItemsSubject.next(items);
-          this.cartItems.set(items);
+    this.http.get<Cart>(this.apiUrl).subscribe({
+      next: (cart) => {
+        if (cart && Array.isArray(cart.items)) {
+          const updatedCart = this.updateCartTotals(cart);
+          this.cartSignal.set(updatedCart);
           if (isPlatformBrowser(this.platformId)) {
-            localStorage.setItem('cart', JSON.stringify(items));
+            localStorage.setItem('cart', JSON.stringify(updatedCart));
           }
         }
       },
@@ -89,33 +94,78 @@ export class CartService {
 
   // --- Fungsi Publik ---
 
-  public addToCart(product: any) {
-    // Update local state first
-    const currentItems = this.cartItems();
-    const updatedItems = Array.isArray(currentItems) ? [...currentItems] : [];
-    updatedItems.push(product);
-    
-    this.cartItems.set(updatedItems);
-    this.cartItemsSubject.next(updatedItems);
-    
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('cart', JSON.stringify(updatedItems));
+  addToCart(product: CartItem) {
+    const currentCart = { ...this.cartSignal() };
+    const existingItem = currentCart.items.find(item => item.id === product.id);
+
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      currentCart.items.push({ ...product, quantity: 1 });
     }
 
-    // Then try to sync with server
-    return this.http.post('/api/cart/add', {
-      product_id: product.id,
-      quantity: 1
-    }, {
-      withCredentials: true,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    }).pipe(
+    this.cartSignal.set(this.updateCartTotals(currentCart));
+
+    return this.syncCartWithServer();
+  }
+
+  removeFromCart(productId: number) {
+    const currentCart = { ...this.cartSignal() };
+    currentCart.items = currentCart.items.filter(item => item.id !== productId);
+    this.cartSignal.set(this.updateCartTotals(currentCart));
+    return this.syncCartWithServer();
+  }
+
+  updateQuantity(productId: number, quantity: number) {
+    if (quantity < 1) {
+      return this.removeFromCart(productId);
+    }
+
+    const currentCart = { ...this.cartSignal() };
+    const item = currentCart.items.find(item => item.id === productId);
+    if (item) {
+      item.quantity = quantity;
+      this.cartSignal.set(this.updateCartTotals(currentCart));
+      return this.syncCartWithServer();
+    }
+    return new Observable(subscriber => subscriber.complete());
+  }
+
+  clearCart() {
+    const emptyCart: Cart = {
+      items: [],
+      total: 0,
+      itemCount: 0
+    };
+    this.cartSignal.set(emptyCart);
+    return this.syncCartWithServer();
+  }
+
+  getCart(): Observable<Cart> {
+    return this.http.get<Cart>('/api/cart').pipe(
       tap({
-        next: (response) => {
-          console.log('Product added to cart successfully:', response);
+        next: (cart) => {
+          if (cart && Array.isArray(cart.items)) {
+            this.cartSignal.set(cart);
+          }
+        },
+        error: (error) => {
+          console.error('Failed to fetch cart from server:', error);
+        }
+      })
+    );
+  }
+
+  // --- Fungsi Helper (Private) ---
+
+  private syncCartWithServer(): Observable<any> {
+    return this.http.post('/api/cart/sync', this.cart()).pipe(
+      tap({
+        next: (response: any) => {
+          // Update local cart with server response if needed
+          if (response?.items) {
+            this.cartSignal.set(response);
+          }
         },
         error: (error) => {
           console.error('Failed to sync cart with server:', error);
@@ -124,44 +174,13 @@ export class CartService {
     );
   }
 
-  public removeItem(productId: number) {
-    this.cartItems.update(items => 
-      items.filter(item => item.id !== productId)
-    );
-    return this.http.delete(`/api/cart/${productId}`, {
-      withCredentials: true
-    });
+  // Helper methods
+  isProductInCart(productId: number): boolean {
+    return this.cart().items.some(item => item.id === productId);
   }
 
-  public clearCart() {
-    this.cartItems.set([]);
-    return this.http.delete('/api/cart', {
-      withCredentials: true
-    });
-  }
-
-  public getCartFromServer() {
-    return this.http.get<any[]>('/api/cart', {
-      withCredentials: true
-    });
-  }
-
-  // --- Fungsi Helper (Private) ---
-
-  private saveCartToLocalStorage(items: any[]) {
-    // 5. Tambahkan 'if' di sini
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('shopping_cart', JSON.stringify(items));
-    }
-  }
-
-  private getCartFromLocalStorage(): any[] {
-    // 6. Tambahkan 'if' di sini
-    if (isPlatformBrowser(this.platformId)) {
-      const items = localStorage.getItem('shopping_cart');
-      return items ? JSON.parse(items) : [];
-    }
-    // 7. Jika di server, selalu kembalikan array kosong
-    return [];
+  getItemQuantity(productId: number): number {
+    const item = this.cart().items.find(item => item.id === productId);
+    return item ? item.quantity : 0;
   }
 }

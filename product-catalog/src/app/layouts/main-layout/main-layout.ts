@@ -12,8 +12,8 @@ import { AuthService } from '../../services/auth'; // <-- 1. Impor AuthService
   styleUrls: ['./main-layout.css']
 })
 export class MainLayoutComponent {
-  // Ini seharusnya sudah ada:
-  public cartService = inject(CartService);
+  private cartService = inject(CartService);
+  protected readonly cart = this.cartService.cart;
   
   // 2. Inject AuthService (buat 'public' agar bisa dipakai di HTML)
   public authService = inject(AuthService); 

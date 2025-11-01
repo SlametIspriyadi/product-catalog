@@ -7,6 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'title',
+        'description',
+        'price',
+        'category',
+        'image'
+    ];
+
+    protected $casts = [
+        'price' => 'decimal:2',
+        'stock' => 'integer'
+    ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
