@@ -1,31 +1,38 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, shareReplay } from 'rxjs';
-
-interface ProductResponse {
-  data: any[];
-}
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  private apiUrl = '/api/products';
+  private apiUrl = 'http://localhost:8000/api/products';
   private http = inject(HttpClient);
-  private productsCache$: Observable<any[]> | null = null;
 
   getProducts(): Observable<any[]> {
-    if (!this.productsCache$) {
-      console.log('ProductService: Fetching products from', this.apiUrl);
-      this.productsCache$ = this.http.get<ProductResponse>(this.apiUrl).pipe(
-        map(response => Array.isArray(response.data) ? response.data : []),
-        shareReplay(1)
-      );
-    }
-    return this.productsCache$;
+    return this.http.get<any[]>(this.apiUrl);
   }
 
-  getProductById(id: string): Observable<any> {
+  getProduct(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`);
   }
+
+  createProduct(data: FormData): Observable<any> { // <-- Ubah 'any' menjadi 'FormData' agar lebih jelas
+    // Tetap POST, ini sudah benar
+    return this.http.post(this.apiUrl, data);
+  }
+
+  // --- PERUBAHAN DI SINI ---
+  updateProduct(id: string, data: FormData): Observable<any> { // <-- Ubah 'any' menjadi 'FormData'
+    // Ubah dari 'put' menjadi 'post'
+    // Laravel akan membacanya sebagai PUT/PATCH karena kita mengirim 
+    // field '_method: "PUT"' di dalam FormData.
+    return this.http.post(`${this.apiUrl}/${id}`, data);
+  }
+  // --- AKHIR PERUBAHAN ---
+
+  deleteProduct(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
 }

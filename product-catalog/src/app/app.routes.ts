@@ -1,18 +1,24 @@
+// GANTI SEMUA DI src/app/app.routes.ts DENGAN KODE INI
+
 import { Routes } from '@angular/router';
-import { ProductListComponent } from './pages/product-list/product-list';
 import { ProductDetailComponent } from './pages/product-detail/product-detail';
 import { CartComponent } from './pages/cart/cart';
 import { LoginComponent } from './pages/login/login';
 import { RegisterComponent } from './pages/register/register';
 import { authGuard } from './guards/auth.guard';
-
-// 1. Impor Layout baru kita
+import { adminGuard } from './guards/admin-guard'; // Pastikan Anda mengimpor ini
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
+
+// Impor semua komponen yang diperlukan
+import { ProductListComponent } from './pages/product-list/product-list';
+import { ProductFormComponent } from './pages/admin/product-form/product-form';
+
+// Ganti nama impor komponen daftar admin agar tidak bentrok
+import { ProductListComponent as AdminProductListComponent } from './pages/admin/product-list/product-list'; 
 
 export const routes: Routes = [
   
-  // 2. Rute-rute ini akan dimuat TANPA navbar
-  // Mereka dimuat langsung di <router-outlet> milik AppComponent
+  // --- Rute Tanpa Layout (Login/Register) ---
   {
     path: 'login',
     component: LoginComponent
@@ -22,12 +28,12 @@ export const routes: Routes = [
     component: RegisterComponent
   },
 
-  // 3. Rute-rute ini akan dimuat DI DALAM MainLayoutComponent
-  // (karena itu, mereka akan punya navbar)
+  // --- Rute DENGAN Layout (Navbar, dll) ---
   {
-    path: '', // URL kosong
+    path: '', 
     component: MainLayoutComponent,
     children: [
+      // Rute Pelanggan
       { path: 'products', component: ProductListComponent },
       { path: 'products/:id', component: ProductDetailComponent },
       { 
@@ -36,11 +42,29 @@ export const routes: Routes = [
         canActivate: [authGuard]
       },
       
-      // Redirect URL kosong (root) ke halaman produk
+      // === RUTE ADMIN (PERBAIKANNYA DI SINI) ===
+      { 
+        path: 'admin', // <-- Rute /admin yang hilang
+        component: AdminProductListComponent, // <-- Muat komponen daftar admin
+        canActivate: [adminGuard] 
+      },
+      { 
+        path: 'admin/products/new', // <-- Rute form
+        component: ProductFormComponent, 
+        canActivate: [adminGuard]
+      },
+      { 
+        path: 'admin/products/edit/:id', // <-- Rute edit
+        component: ProductFormComponent, 
+        canActivate: [adminGuard]
+      },
+      // === AKHIR RUTE ADMIN ===
+
+      // Redirect halaman utama ke /products
       { path: '', redirectTo: 'products', pathMatch: 'full' }
     ]
   },
 
-  // 4. (Opsional) Fallback jika ada URL aneh
+  // Fallback terakhir
   { path: '**', redirectTo: 'products' }
 ];

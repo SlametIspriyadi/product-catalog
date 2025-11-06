@@ -64,7 +64,7 @@ export class ProductDetailComponent implements OnInit {
       const productId = params['id'];
       
       if (productId) {
-        this.productService.getProductById(productId).subscribe(data => {
+        this.productService.getProduct(productId).subscribe((data: any) => {
           // 3. Gunakan .set() untuk mengisi data ke signal
           this.product.set(data);
           console.log('Detail produk di-set ke signal!', this.product());

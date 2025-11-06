@@ -5,25 +5,39 @@
     </a>
 
     <div class="nav-links">
-      
-      <a [routerLink]="['/cart']" class="nav-cart">
-        Cart 
-        <span class="cart-badge">
-          {{ cart().itemCount }}
-        </span>
-      </a>
 
       <ng-container *ngIf="!authService.isAuthenticated()">
         <a [routerLink]="['/login']" class="nav-link">Login</a>
         <a [routerLink]="['/register']" class="nav-link button-register">Register</a>
       </ng-container>
 
+      
       <ng-container *ngIf="authService.isAuthenticated()">
+        
         <span class="nav-welcome">
           Hi, {{ authService.currentUser()?.name }}
         </span>
         
+        <ng-container *ngIf="authService.currentUser()?.role === 'admin'">
+          <a [routerLink]="['/admin']" class="nav-link button-admin">
+            Admin Dashboard
+          </a>
+          <a [routerLink]="['/admin/products/new']" class="nav-link button-admin">
+            + Tambah Produk
+          </a>
+        </ng-container>
+        
+        <ng-container *ngIf="authService.currentUser()?.role !== 'admin'">
+          <a [routerLink]="['/cart']" class="nav-cart">
+            Cart 
+            <span class="cart-badge">
+              {{ cart().itemCount }}
+            </span>
+          </a>
+        </ng-container>
+
         <a (click)="logout()" class="nav-link logout-button">Logout</a>
+        
       </ng-container>
 
     </div>

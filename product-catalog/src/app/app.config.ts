@@ -12,6 +12,7 @@ import {
 import { credentialsInterceptor } from './with-credentials-interceptor'; 
 // 2. Impor 'withInterceptors'
 import { withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './interceptors/auth-interceptor';
 
 export const appConfig: ApplicationConfig = {
   
@@ -27,7 +28,8 @@ export const appConfig: ApplicationConfig = {
       }),
       // 4. TAMBAHKAN 'withInterceptors' DI SINI
       withInterceptors([
-        credentialsInterceptor // <-- Daftarkan interceptor Anda
+        credentialsInterceptor, // <-- Daftarkan interceptor Anda
+        authInterceptor
       ])
     ),
     // ...

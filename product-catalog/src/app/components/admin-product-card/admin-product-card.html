@@ -1,0 +1,15 @@
+<div class="admin-card">
+  <img [src]="product.image" [alt]="product.name" class="card-image">
+  <div class="card-content">
+    <h5 class="card-title">{{ product.name }}</h5>
+    <p class="card-price">{{ product.price | currency:'IDR' }}</p>
+  </div>
+  <div class="card-actions">
+    <a [routerLink]="['/admin/products/edit', product.id]" class="btn btn-warning">
+      Edit
+    </a>
+    <button (click)="onDeleteClick()" class="btn btn-danger">
+      Delete
+    </button>
+  </div>
+</div>

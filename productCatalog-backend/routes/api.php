@@ -36,8 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/cart/{id}', [CartController::class, 'remove']);
     Route::delete('/cart', [CartController::class, 'clear']);
 
-    // Admin Product Routes
-    Route::prefix('admin')->group(function () {
+    // Rute ADMIN (Hanya admin boleh akses)
+    Route::middleware('admin')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);

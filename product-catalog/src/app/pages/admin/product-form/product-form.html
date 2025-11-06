@@ -1,0 +1,87 @@
+<div class="form-container">
+  <h2>{{ isEditMode ? 'Edit Produk' : 'Tambah Produk Baru' }}</h2>
+
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+
+    <div class="form-group">
+      <label for="name">Nama Produk</label>
+      <input type="text" id="name" formControlName="name" class="form-control"
+             [class.is-invalid]="name?.invalid && (name?.dirty || name?.touched)">
+      <div *ngIf="name?.invalid && (name?.dirty || name?.touched)" class="validation-error">
+        <div *ngIf="name?.errors?.['required']">
+          Nama produk tidak boleh kosong.
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Deskripsi</label>
+      <textarea id="description" formControlName="description" class="form-control"
+                [class.is-invalid]="description?.invalid && (description?.dirty || description?.touched)"></textarea>
+      <div *ngIf="description?.invalid && (description?.dirty || description?.touched)" class="validation-error">
+        <div *ngIf="description?.errors?.['required']">
+          Deskripsi tidak boleh kosong.
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="price">Harga</label>
+      <input type="number" id="price" formControlName="price" class="form-control"
+             [class.is-invalid]="price?.invalid && (price?.dirty || price?.touched)">
+      <div *ngIf="price?.invalid && (price?.dirty || price?.touched)" class="validation-error">
+        <div *ngIf="price?.errors?.['required']">
+          Harga tidak boleh kosong.
+        </div>
+        <div *ngIf="price?.errors?.['pattern']">
+          Harga harus berupa angka yang valid.
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="stock">Stok</label>
+      <input type="number" id="stock" formControlName="stock" class="form-control"
+             [class.is-invalid]="stock?.invalid && (stock?.dirty || stock?.touched)">
+      <div *ngIf="stock?.invalid && (stock?.dirty || stock?.touched)" class="validation-error">
+        <div *ngIf="stock?.errors?.['required']">
+          Stok tidak boleh kosong.
+        </div>
+        <div *ngIf="stock?.errors?.['pattern']">
+          Stok harus berupa angka.
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="category_id">Kategori</label>
+      <select id="category_id" formControlName="category_id" class="form-control"
+              [class.is-invalid]="category_id?.invalid && (category_id?.dirty || category_id?.touched)">
+        <option value="" disabled>-- Pilih Kategori --</option>
+        <option *ngFor="let category of categories()" [value]="category.id">
+          {{ category.name }}
+        </option>
+      </select>
+      <div *ngIf="category_id?.invalid && (category_id?.dirty || category_id?.touched)" class="validation-error">
+        <div *ngIf="category_id?.errors?.['required']">
+          Kategori tidak boleh kosong.
+        </div>
+      </div>
+    </div>
+
+
+    <div class="form-group">
+      <label for="image">Upload Gambar</label>
+      <input type="file" id="image" (change)="onFileChange($event)" class="form-control">
+      
+      <div *ngIf="isEditMode && existingImageUrl" class="image-preview">
+        <p>Gambar saat ini:</p>
+        <img [src]="existingImageUrl" alt="Preview Gambar">
+      </div>
+    </div>
+
+    <button type="submit" [disabled]="productForm.invalid" class="btn btn-primary">
+      {{ isEditMode ? 'Update Produk' : 'Simpan Produk' }}
+    </button>
+  </form>
+</div>

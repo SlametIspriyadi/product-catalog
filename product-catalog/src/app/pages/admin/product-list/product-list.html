@@ -1,0 +1,16 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h2>Manajemen Produk</h2>
+    <a [routerLink]="['/admin/products/new']" class="btn btn-primary">
+      + Tambah Produk Baru
+    </a>
+  </div>
+  
+  <div class="admin-product-grid">
+    <app-admin-product-card 
+      *ngFor="let product of products()" 
+      [product]="product"
+      (delete)="handleDelete($event)"> 
+    </app-admin-product-card>
+  </div>
+</div>

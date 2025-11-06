@@ -25,11 +25,37 @@ export class ProductListComponent implements OnInit, OnDestroy {
   private productService = inject(ProductService);
   private subscription?: Subscription;
 
-  ngOnInit(): void {
+  // frontend/src/app/pages/product-list/product-list.ts
+
+  // Ganti kode ini di src/app/pages/product-list/product-list.ts
+
+// Ganti kode ini di src/app/pages/product-list/product-list.ts
+
+ngOnInit(): void {
     console.log('ProductListComponent dimuat, mengambil data...');
     this.subscription = this.productService.getProducts().subscribe({
       next: (data) => {
-        this.products.set(data);
+        
+        // Kita cast 'data' ke 'any' untuk mem-bypass error TS2339.
+        const responseData = data as any;
+
+        // --- PERBAIKAN / FIX ---
+        // Array produk Anda ada di dalam properti 'data', bukan 'products'
+        if (responseData && Array.isArray(responseData.data)) {
+          
+          // Ambil array dari 'responseData.data'
+          this.products.set(responseData.data); 
+        } 
+        // Fallback jika API terkadang mengembalikan array secara langsung
+        else if (Array.isArray(responseData)) {
+          this.products.set(responseData);
+        } 
+        // Tangani jika data tidak terduga
+        else {
+          console.error("Struktur data produk tidak terduga:", responseData);
+          this.products.set([]);
+        }
+        
         console.log('Produk berhasil di-set ke signal!', this.products().length);
       },
       error: (err) => {
@@ -37,7 +63,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   ngOnDestroy(): void {
     if (this.subscription) {
       this.subscription.unsubscribe();
